@@ -183,7 +183,7 @@ int get_frame_from_chunk(const struct ds_desc_t *desc, const char *ds_name,
   if (frame_idx[1] != 0 || frame_idx[2] != 0) {
     char message[64];
     sprintf(message,
-            "Require frame selection starts at [n, 0, 0], not [n, %llu, %llu]",
+            "Require frame selection starts at [n, 0, 0], not [n, %lu, %lu]",
             frame_idx[1], frame_idx[2]);
     ERROR_JUMP(-1, done, message);
   }
@@ -197,13 +197,13 @@ int get_frame_from_chunk(const struct ds_desc_t *desc, const char *ds_name,
 
   if (H5Dget_chunk_storage_size(d_id, c_offset, &c_bytes) < 0) {
     char message[96];
-    sprintf(message, "Error reading chunk size from %.32s for frame %llu",
+    sprintf(message, "Error reading chunk size from %.32s for frame %lu",
             ds_name, frame_idx[0]);
     ERROR_JUMP(-1, done, message);
   }
   if (c_bytes == 0) {
     char message[96];
-    sprintf(message, "Target chunk %llu has zero size for dataset %.32s",
+    sprintf(message, "Target chunk %lu has zero size for dataset %.32s",
             frame_idx[0], ds_name);
     ERROR_JUMP(-1, done, message);
   }
@@ -213,8 +213,8 @@ int get_frame_from_chunk(const struct ds_desc_t *desc, const char *ds_name,
     if (!c_buffer) {
       char message[128];
       sprintf(message,
-              "Unable to allocate chunk buffer for dataset %.32s - frame %llu, "
-              "size %llu bytes",
+              "Unable to allocate chunk buffer for dataset %.32s - frame %lu, "
+              "size %lu bytes",
               ds_name, frame_idx[0], c_bytes);
       ERROR_JUMP(-1, done, message);
     }
@@ -226,7 +226,7 @@ int get_frame_from_chunk(const struct ds_desc_t *desc, const char *ds_name,
       0) {
     char message[128];
     sprintf(message,
-            "Error reading chunk %llu from dataset %.32s - size %llu bytes",
+            "Error reading chunk %lu from dataset %.32s - size %lu bytes",
             frame_idx[0], ds_name, c_bytes);
     ERROR_JUMP(-1, done, message);
   }
@@ -237,7 +237,7 @@ int get_frame_from_chunk(const struct ds_desc_t *desc, const char *ds_name,
                          buffer) < 0) {
       char message[128];
       sprintf(message,
-              "Error processing chunk %llu from %.32s with bitshuffle_lz4",
+              "Error processing chunk %lu from %.32s with bitshuffle_lz4",
               frame_idx[0], ds_name);
       ERROR_JUMP(-1, done, message);
     }
@@ -842,22 +842,22 @@ int create_dataset_descriptor(struct ds_desc_t **desc,
    * opening if we're using an old library version, and the potential to use the
    * optimised chunk read strategy
    */
-  if (H5Lexists(visit_result->nxdetector, "data_000001", H5P_DEFAULT) > 0) {
-    ds_id = visit_result->nxdetector;
-    ds_prop_func = &get_dectris_eiger_dataset_dims;
-    frame_func = &get_dectris_eiger_frame;
-  } else if (H5Lexists(visit_result->nxdetector, "data", H5P_DEFAULT) > 0) {
+  if (H5Lexists(visit_result->nxdetector, "data", H5P_DEFAULT) > 0) {
     ds_id = visit_result->nxdetector;
     ds_prop_func = &get_nxs_dataset_dims;
     frame_func = &get_nxs_frame;
-  } else if (H5Lexists(visit_result->nxdata, "data_000001", H5P_DEFAULT) > 0) {
-    ds_id = visit_result->nxdata;
+  } else if (H5Lexists(visit_result->nxdetector, "data_000001", H5P_DEFAULT) > 0) {
+    ds_id = visit_result->nxdetector;
     ds_prop_func = &get_dectris_eiger_dataset_dims;
     frame_func = &get_dectris_eiger_frame;
   } else if (H5Lexists(visit_result->nxdata, "data", H5P_DEFAULT) > 0) {
     ds_id = visit_result->nxdata;
     ds_prop_func = &get_nxs_dataset_dims;
     frame_func = &get_nxs_frame;
+  } else if (H5Lexists(visit_result->nxdata, "data_000001", H5P_DEFAULT) > 0) {
+    ds_id = visit_result->nxdata;
+    ds_prop_func = &get_dectris_eiger_dataset_dims;
+    frame_func = &get_dectris_eiger_frame;
   } else {
     ERROR_JUMP(-1, done, "Could not locate detector dataset");
   }
@@ -925,7 +925,7 @@ int get_detector_info(const hid_t fid, struct ds_desc_t **desc) {
   herr_t err = 0;
   struct det_visit_objects_t objects = {0};
   err =
-      H5Ovisit(fid, H5_INDEX_NAME, H5_ITER_INC, &det_visit_callback, &objects);
+      H5Ovisit(fid, H5_INDEX_NAME, H5_ITER_INC, &det_visit_callback, &objects, H5O_INFO_ALL);
   if (err < 0) {
     clear_det_visit_objects(&objects);
     ERROR_JUMP(-1, done, "Error during H5Ovisit callback");
