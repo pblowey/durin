@@ -8,7 +8,7 @@ BSLZ4_BUILD_DIR = ./bslz4/build
 BSLZ4_INC_DIR = $(BSLZ4_SRC_DIR)
 
 CC=h5cc
-CFLAGS=-DH5_USE_110_API -Wall -g -O2 -fpic -I$(INC_DIR) -I$(BSLZ4_INC_DIR) -std=c99 -shlib
+CFLAGS=-DH5_USE_110_API -Wall -g -O2 -fpic -I$(INC_DIR) -I$(BSLZ4_INC_DIR) -std=c99
 
 .PHONY: plugin
 plugin: $(BUILD_DIR)/durin-plugin.so
@@ -42,7 +42,7 @@ $(BSLZ4_BUILD_DIR)/bitshuffle_core.o $(BSLZ4_BUILD_DIR)/iochain.o
 $(BUILD_DIR)/durin-plugin.so: $(BUILD_DIR)/plugin.o $(BUILD_DIR)/file.o $(BUILD_DIR)/err.o $(BUILD_DIR)/filters.o \
 $(BUILD_DIR)/bslz4.a
 	mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -shared -noshlib $^ -o $(BUILD_DIR)/durin-plugin.so
+	$(CC) $(CFLAGS) -shared $^ -o $(BUILD_DIR)/durin-plugin.so
 
 $(BUILD_DIR)/example: $(BUILD_DIR)/test.o $(BUILD_DIR)/file.o $(BUILD_DIR)/err.o $(BUILD_DIR)/filters.o \
 $(BUILD_DIR)/bslz4.a
