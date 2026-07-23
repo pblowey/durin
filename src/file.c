@@ -837,27 +837,29 @@ int create_dataset_descriptor(struct ds_desc_t **desc,
   }
 
   /* determine where the data is stored and what strategy to use */
-  /* we select the "dectris-eiger" strategy if both are valid due to
-   * potential confusion with the sizes of a virtual dataset, possible failure
-   * opening if we're using an old library version, and the potential to use the
-   * optimised chunk read strategy
+  /* we select the "virtual-dataset" strategy if both are valid as the 
+   * virtual dataset is more likely to be the intended dataset, now that 
+   * multiple virtual datasets can be taken in a single collection (e.g.
+   * for multi-sample pins). In these cases, all of the images taken in the
+   * full collection are linked as data_######.h5 files with the virtual
+   * dataset mapping to the relevant images for the current sample.
    */
-  if (H5Lexists(visit_result->nxdetector, "data_000001", H5P_DEFAULT) > 0) {
-    ds_id = visit_result->nxdetector;
-    ds_prop_func = &get_dectris_eiger_dataset_dims;
-    frame_func = &get_dectris_eiger_frame;
-  } else if (H5Lexists(visit_result->nxdetector, "data", H5P_DEFAULT) > 0) {
+  if (H5Lexists(visit_result->nxdetector, "data", H5P_DEFAULT) > 0) {
     ds_id = visit_result->nxdetector;
     ds_prop_func = &get_nxs_dataset_dims;
     frame_func = &get_nxs_frame;
-  } else if (H5Lexists(visit_result->nxdata, "data_000001", H5P_DEFAULT) > 0) {
-    ds_id = visit_result->nxdata;
+  } else if (H5Lexists(visit_result->nxdetector, "data_000001", H5P_DEFAULT) > 0) {
+    ds_id = visit_result->nxdetector;
     ds_prop_func = &get_dectris_eiger_dataset_dims;
     frame_func = &get_dectris_eiger_frame;
   } else if (H5Lexists(visit_result->nxdata, "data", H5P_DEFAULT) > 0) {
     ds_id = visit_result->nxdata;
     ds_prop_func = &get_nxs_dataset_dims;
     frame_func = &get_nxs_frame;
+  } else if (H5Lexists(visit_result->nxdata, "data_000001", H5P_DEFAULT) > 0) {
+    ds_id = visit_result->nxdata;
+    ds_prop_func = &get_dectris_eiger_dataset_dims;
+    frame_func = &get_dectris_eiger_frame;
   } else {
     ERROR_JUMP(-1, done, "Could not locate detector dataset");
   }

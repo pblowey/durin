@@ -5,10 +5,17 @@
 
 #include <hdf5.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "file.h"
 #include "filters.h"
 #include "plugin.h"
+
+static size_t bslz4_h5z_filter(unsigned int flags, size_t cd_nelmts,
+                               const unsigned int cd_values[],
+                               size_t nbytes, size_t *buf_size,
+                               void **buf);
+static int register_bitshuffle_filter(void);
 
 /* XDS does not provide an error callback facility, so just write to stderr
    for now - generally regarded as poor practice */
@@ -96,6 +103,17 @@ done:
 extern "C" {
 #endif
 
+static const H5Z_class2_t bslz4_h5z_class = {
+    H5Z_CLASS_T_VERS,
+    BS_H5_FILTER_ID,
+    0,
+    1,
+    "bitshuffle",
+    NULL,
+    NULL,
+    bslz4_h5z_filter,
+};
+
 void plugin_open(const char *filename, int info[1024], int *error_flag) {
   int retval = 0;
   *error_flag = 0;
@@ -104,6 +122,10 @@ void plugin_open(const char *filename, int info[1024], int *error_flag) {
 
   if (H5dont_atexit() < 0) {
     ERROR_JUMP(-2, done, "Failed configuring HDF5 library behaviour");
+  }
+
+  if (register_bitshuffle_filter() < 0) {
+    ERROR_JUMP(-2, done, "Failed registering bitshuffle filter");
   }
 
   if (init_h5_error_handling() < 0) {
@@ -241,6 +263,64 @@ void plugin_close(int *error_flag) {
   if (H5close() < 0) {
     *error_flag = -1;
   }
+}
+
+static size_t bslz4_h5z_filter(unsigned int flags, size_t cd_nelmts,
+                               const unsigned int cd_values[],
+                               size_t nbytes, size_t *buf_size,
+                               void **buf) {
+  size_t new_size = 0;
+  void *new_buf = NULL;
+  void *old_buf = *buf;
+
+  if (!(flags & H5Z_FLAG_REVERSE)) {
+    /* This plugin only supports decode/read direction. */
+    return nbytes;
+  }
+
+  if (cd_nelmts != BS_H5_N_PARAMS) {
+    return 0;
+  }
+
+  if (nbytes < 8) {
+    return 0;
+  }
+
+  const unsigned char *in_buf = (const unsigned char *)old_buf;
+  uint64_t uncompressed_size = 0;
+  for (int i = 0; i < 8; ++i) {
+    uncompressed_size = (uncompressed_size << 8) | in_buf[i];
+  }
+  new_size = (size_t)uncompressed_size;
+
+  new_buf = malloc(new_size);
+  if (!new_buf) {
+    return 0;
+  }
+
+  if (bslz4_decompress(cd_values, nbytes, old_buf, new_size, new_buf) < 0) {
+    free(new_buf);
+    return 0;
+  }
+
+  free(old_buf);
+  *buf = new_buf;
+  *buf_size = new_size;
+  return new_size;
+}
+
+static int register_bitshuffle_filter(void) {
+  htri_t available = H5Zfilter_avail(BS_H5_FILTER_ID);
+  if (available < 0) {
+    return -1;
+  }
+  if (available > 0) {
+    return 0;
+  }
+  if (H5Zregister(&bslz4_h5z_class) < 0) {
+    return -1;
+  }
+  return 0;
 }
 
 #ifdef __cplusplus
