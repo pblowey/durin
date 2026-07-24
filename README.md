@@ -9,8 +9,8 @@ See:
 * https://strucbio.biologie.uni-konstanz.de/xdswiki
 
 ## Get Durin
-
-Latest release at https://github.com/DiamondLightSource/durin/releases/tag/2019v1
+A pre-built durin plugin can be downloaded from the github releases attached to this repository.
+Latest release at https://github.com/DiamondLightSource/durin/releases/latest
 
 ## Usage
 In your XDS.INP add:
@@ -24,52 +24,60 @@ Eiger master file or the NeXus file for the data collection.
 It is generally assumed that the files `[data_path]/data_images_data_xxxxxx.h5` contain the actual
 datasets and the master file contains HDF5 external links to these, but that is not required, so long as
 the master file contains an `NXdata` or `NXdetector` group with either a dataset named `data` or a
-series of datasets named `data_000001`, `data_000002`, etc.
+series of datasets named `data_000001`, `data_000002`, etc.. If both are present, the dataset named
+`data` will be prioritised.
 
 
-## Requirements
-* HDF5 Library (https://www.hdfgroup.org/downloads)
+## Building the Durin Plugin
 
+If you'd like to build the plugin yourself, follow the instructions below.
 
-## Building
+### Requirements
+- cmake version >= 3.19 is required to build Durin.
+- No manual HDF5 installation is required by default. The CMake build will fetch and build a
+	compatible HDF5 as a subproject so users do not need to download or install HDF5 themselves.
+- If you prefer to build against a system-installed HDF5, see the "Use system HDF5" section below.
 
-### Building HDF5 library
-The HDF5 library used when building durin must have been compiled with specific switches enabled
-to allow the durin plugin to be built and used.
+### Build
+Durin is now built using CMake. By default the CMake configuration will download and build a
+compatible HDF5 dependency automatically, and will also fetch and build the `bitshuffle` library
+required for data filtering in virtual datasets. This means you can build the plugin without 
+installing HDF5 or bitshuffle yourself.
 
-Download the HDF5 source code (https://www.hdfgroup.org/downloads/hdf5/source-code) and extract
-to any directory (referred to as `/hdf5_dir`), and run the following commands.
+Example build commands (from the root directory of this repository):
 ```
-cd /hdf5_dir
 mkdir build
 cd build
+cmake ../
+cmake --build .
+```
+After a successful build the plugin will be available at `build/durin-plugin.so`.
+
+### Use system HDF5 (optional)
+
+If you want to build against a preinstalled HDF5 instead of the bundled subproject, disable
+the in-tree HDF5 build and point CMake at your HDF5 installation. Set `BUILD_HDF5` to `OFF`:
+
+```
+cmake .. -DBUILD_HDF5=OFF
+cmake --build . 
+```
+
+When using a system HDF5, it must have been built with the options required by the plugin:
+thread-safety, the high-level library, and deprecated/compatibility symbols. For source builds
+these typically correspond to the configure flags shown below (or the equivalent for your
+distribution/build system):
+
+```
 export CFLAGS=-fPIC
 ../configure --enable-threadsafe --enable-deprecated-symbols --enable-hl --enable-unsupported
 make
 make check
 make install
 ```
-The hdf5 tools and libraries should now be located in `/hdf5_dir/build/hdf5`
 
-For reference, the plugin requires the thread-safe switch and the optimised chunk read function.
-The chunk read function may be defined in the high level library instead of the regular library,
-depending on the exact HDF5 version downloaded (hence the --enable-deprecated-symbols _and_ --enable-hl).
-The unsupported flag enables building with both threadsafe and high-level enabled.
-
-
-### Building durin plugin
-The plugin makefile will use the "h5cc" compiler wrapper, provided by the HDF5 library, which
-must be on your PATH.
-Download or clone the plugin source code (https://github.com/DiamondLightSource/durin)
-into any directory (referred to as `/durin_dir`) and run the following commands.
-```
-cd /durin_dir
-PATH=/hdf5_dir/build/hdf5/bin:$PATH
-make
-```
-The plugin is located at `/durin_dir/build/durin-plugin.so` and should be added to the
-XDS.INP file as `LIB=/durin_dir/build/durin-plugin.so`
-
+The CMake option to use system HDF5 is provided for advanced users; the default bundled build
+should be sufficient for most workflows and avoids the need to manage HDF5 installation manually.
 
 
 ## Example XDS.INP
