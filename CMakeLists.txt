@@ -52,14 +52,21 @@ endif()
 ###############################################################################
 # Bitshuffle
 #
+FetchContent_Declare(
+    bitshuffle
+    URL https://github.com/kiyo-masui/bitshuffle/archive/refs/tags/0.5.2.tar.gz
+    URL_HASH SHA256=b6d9369cab661c1253892e4755021fe6c3a29eee93a1764f0bb161015c4b7649
+)
+FetchContent_MakeAvailable(bitshuffle)
+
 add_library(bslz4
     STATIC
-    bslz4/src/lz4.c
-    bslz4/src/bitshuffle.c
-    bslz4/src/bitshuffle_core.c
-    bslz4/src/iochain.c
+    "${bitshuffle_SOURCE_DIR}/lz4/lz4.c"
+    "${bitshuffle_SOURCE_DIR}/src/bitshuffle.c"
+    "${bitshuffle_SOURCE_DIR}/src/bitshuffle_core.c"
+    "${bitshuffle_SOURCE_DIR}/src/iochain.c"
 )
-target_include_directories(bslz4 PUBLIC bslz4/src)
+target_include_directories(bslz4 PUBLIC "${bitshuffle_SOURCE_DIR}/src" "${bitshuffle_SOURCE_DIR}/lz4")
 set_property(TARGET bslz4 PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 ###############################################################################
