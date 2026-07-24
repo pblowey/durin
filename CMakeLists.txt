@@ -24,12 +24,12 @@ if (BUILD_HDF5)
     include(FetchContent)
     FetchContent_Declare(
         hdf5
-        URL https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-1_12_1.tar.gz
-        URL_HASH SHA256=e6dde173c2d243551922d23a0387a79961205b018502e6a742acb30b61bc2d5f
+        URL https://github.com/HDFGroup/hdf5/releases/download/2.1.1/hdf5-2.1.1.tar.gz
+        URL_HASH SHA256=efff93b5a904d66e8f626d7da60b5eedc9faf544be27dbabbaa87967b8ad798b
     )
     # To get what we want, this includes overriding settings
     set(HDF5_EXTERNALLY_CONFIGURED ON)
-    set(ALLOW_UNSUPPORTED ON CACHE BOOL "Allow HL and threadsafe" FORCE)
+    set(HDF5_ALLOW_UNSUPPORTED ON CACHE BOOL "Allow HL and threadsafe" FORCE)
     set(BUILD_TESTING OFF CACHE BOOL "Build HDF5 Unit Testing")
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Libraries")
     set(HDF5_BUILD_CPP_LIB OFF CACHE BOOL "Build HDF5 C++ Library")
