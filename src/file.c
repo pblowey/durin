@@ -927,7 +927,7 @@ int get_detector_info(const hid_t fid, struct ds_desc_t **desc) {
   herr_t err = 0;
   struct det_visit_objects_t objects = {0};
   err =
-      H5Ovisit(fid, H5_INDEX_NAME, H5_ITER_INC, &det_visit_callback, &objects);
+      H5Ovisit(fid, H5_INDEX_NAME, H5_ITER_INC, &det_visit_callback, &objects, H5O_INFO_BASIC);
   if (err < 0) {
     clear_det_visit_objects(&objects);
     ERROR_JUMP(-1, done, "Error during H5Ovisit callback");
