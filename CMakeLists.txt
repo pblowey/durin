@@ -9,6 +9,8 @@ project(durin LANGUAGES C)
 include(CheckLanguage)
 check_language(Fortran)
 
+include(FetchContent)
+
 # Set the default build type to RelWithDebInfo
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
@@ -18,10 +20,8 @@ endif()
 ###############################################################################
 # Building HDF5 in-tree
 option(BUILD_HDF5 "Build our own copy of HDF5" ON)
-
 if (BUILD_HDF5)
     set(FETCHCONTENT_QUIET OFF CACHE BOOL "Quiet Fetching" FORCE)
-    include(FetchContent)
     FetchContent_Declare(
         hdf5
         URL https://github.com/HDFGroup/hdf5/releases/download/2.1.1/hdf5-2.1.1.tar.gz
