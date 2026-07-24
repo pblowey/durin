@@ -71,8 +71,6 @@ add_library(durin-objects OBJECT src/file.c src/err.c src/filters.c )
 target_link_libraries(durin-objects PUBLIC HDF5::HDF5 )
 target_link_libraries(durin-objects PRIVATE bslz4 )
 set_property(TARGET durin-objects PROPERTY POSITION_INDEPENDENT_CODE ON)
-# Even if using HDF5 1.12, we want the 1.10 API
-target_compile_definitions(durin-objects PUBLIC H5_USE_110_API)
 
 ###############################################################################
 # durin-plugin
